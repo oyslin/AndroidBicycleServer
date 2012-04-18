@@ -1,0 +1,18 @@
+!!!5
+html
+	head
+		title= title
+		link(rel="stylesheet", type="text/css", href="/styles/style.css")
+		script(type="text/javascript", src="/js/lib/jquery-1.7.min.js")	
+	body
+		.body_container
+			.menu_container
+				a.menu_item(title="", href="/updateversioninfo") Update Version
+				a.menu_item(title="", href="/feedback") Show Feedback
+			.content_container
+				.version_name
+					span VerionName:
+					span #{verionInfo.versionName}
+				.version_code
+					span VersionCode:
+					span #{verionInfo.versionCode}

@@ -1,0 +1,18 @@
+!!!5
+html
+	head
+		title= title
+		link(rel="stylesheet", type="text/css", href="/styles/style.css")
+	body
+		.body_container
+			.menu_container
+				a.menu_item(title="", href="/") Home
+			.content_container
+				form(name="bicycleInfo", action="/versioninfo", method="post")
+					.version_name
+						span VerionName:
+						input.verion_name_input(type="text", name="versionName") 
+					.version_code
+						span VersionCode:
+						input.version_code_input(type="text", name="versionCode")
+					input.update_btn(type="submit", value="Update")

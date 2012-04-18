@@ -1,0 +1,43 @@
+body{
+	font-size: 14px;
+	margin: 0px;
+	padding: 0px;
+	background-color: #CCCCCC;
+}
+
+.body_container{
+	width:800px;
+	margin:0 auto;
+	background-color: #FFF;
+	min-height: 600px;
+}
+.menu_container{
+	width:100%;
+	height:30px;
+	background-color: #0055AA;	
+}
+.menu_container .menu_item{
+	font-size: 150%;
+	color: #FFFFFF;
+	height: 100%;
+	vertical-align:middle;
+	margin: 12px;
+	font-style:normal;
+	font-weight:bold;
+	text-decoration:none;
+}
+.content_container{
+	width:200px;
+	height:auto;
+	margin: 100px auto;
+	clear: both;
+	border: 1px solid #AAA;
+}
+.content_container .version_name,
+.content_container .version_code{
+	background-color: #90F8F5;	
+	clear: both;
+}
+.update_btn{
+	text-align: center;
+}
