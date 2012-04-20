@@ -41,3 +41,20 @@ body{
 .update_btn{
 	text-align: center;
 }
+
+.feedback_content{
+	width: 800px;
+	height: auto;	
+	margin: 0 auto;
+}
+
+.feedback_content .feedback_time{
+	padding: 0 10px;	
+	width: 180px;
+	background-color: #CCC;
+}
+.feedback_content .feedback_msg{	
+	background-color:#EEE;
+	word-break:break-all;
+	word-wrap:break-word;
+}

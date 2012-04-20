@@ -1,0 +1,20 @@
+!!!5
+html
+	head
+		title= title
+		link(rel="stylesheet", type="text/css", href="/styles/style.css")
+		script(type="text/javascript", src="/js/lib/jquery-1.7.min.js")	
+	body
+		.body_container
+			.menu_container
+				a.menu_item(title="", href="/updateversioninfo") Update Version
+				a.menu_item(title="", href="/feedback") Show Feedback
+			.feedback_content
+				-if(feedbackArray.length)
+					table					
+						-for item in feedbackArray
+							tr
+								td.feedback_time= item.uploadTime
+								td.feedback_msg= item.feedbackMsg
+				-else
+					span No feedback				
