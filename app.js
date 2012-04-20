@@ -1,8 +1,8 @@
 
 var express = require('express'),
 	app = express.createServer(),
-	redis = require('redis'),
-	redisDB = redis.createClient(),
+	mongo = require('mongoskin'),
+	mongodb = mongo.db('127.0.0.1:27017/bicycleproxy'),
 	bicycleInfo = require('./server/bicycleinfo');
 	
 app.configure(function() {
@@ -26,23 +26,21 @@ app.configure('production', function() {
 	app.use(express.errorHandler());
 });
 
-redisDB.on("error", function (err) {
-    console.log("Error " + err);
-});
-
 app.get('/', function(req, res){
-	redisDB.mget('versionName', 'versionCode', function(err, versionInfo){
+	var versioninfo = mongodb.collection('versioninfo');
+	versioninfo.findOne({appName:'AndroidBicycle'}, function(err, data){
 		if(err){
 			res.redirect('/error');
 		}else{
-			var versionName = versionInfo[0],
-				versionCode = versionInfo[1];
-			console.log('versionName = ' + versionName);
-			console.log('versionCode = ' + versionCode);
+			var versionName = data.versionName,
+				versionCode = data.versionCode;
+			if(versionName == null || versionName == ''){
+				versionName = '1.0';
+				versionCode = 1;
+			}
 			res.render('index.jade', {title:'AndroidBicycle', verionInfo : {versionName : versionName, versionCode : versionCode}});
 		}
-	});
-	
+	});	
 });
 
 app.get('/bicycleinfo', function(req, res){
@@ -50,11 +48,12 @@ app.get('/bicycleinfo', function(req, res){
 });
 
 app.get('/versioninfo', function(req, res){
-	redisDB.mget('versionName', 'versionCode', function(err, versionInfo){
+	var versioninfo = mongodb.collection('versioninfo');
+	versioninfo.findOne({appName:'AndroidBicycle'}, function(err, data){
 		if(err){
 			res.redirect('/error');
 		}else{
-			res.json({versionName: versionInfo[0], versionCode : versionInfo[1]});
+			res.json({versionName:data.versionName, versionCode: data.versionCode});
 		}
 	});
 });
@@ -73,17 +72,49 @@ app.get('/error', function(req, res){
 
 app.post('/versioninfo', function(req, res){
 	var versionName = req.body.versionName;
-	var versionCode = req.body.versionCode;
-	console.log('versionName = ' + versionName);
-	console.log('versionCode = ' + versionCode);
-	redisDB.set('versionName', versionName);
-	redisDB.set('versionCode', versionCode);
+	var versionCode = req.body.versionCode;	
 	
-	res.redirect('/');
+	var versioninfo = mongodb.collection('versioninfo');
+	
+	versioninfo.find({appName:'AndroidBicycle'}).toArray(function(err, data){
+		if(err){
+			res.redirect('/error');
+		}else{
+			if(data.length == 0){
+				versioninfo.insert({appName:'AndroidBicycle', versionName:versionName, versionCode : versionCode}, function(err){
+					if(err){
+						res.redirect('/error');
+					}else{						
+						res.redirect('/');						
+					}
+				});
+			}else{
+				versioninfo.update({appName:'AndroidBicycle'}, {$set:{versionName:versionName, versionCode : versionCode}}, function(err){
+					if(err){
+						res.redirect('/error');
+					}else{
+						res.redirect('/');
+					}
+				});
+			}
+		}
+	});	
 });
 
 app.post('/feedback', function(req, res){
-	
+	var feedbackMsg = req.body.msg;
+	var feedback = mongodb.collection('feedback');
+	feedback.inert({appName:'AndroidBicycle', feedbackMsg : feedbackMsg}, function(err, result){
+		if(err){
+			res.redirect('/error');
+		}else{			
+			if(result){
+				res.redirec('/');
+			}else{
+				res.redirect('/error');
+			}
+		}
+	});
 });
 
 app.listen(8000);
