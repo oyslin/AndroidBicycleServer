@@ -15,18 +15,15 @@ app.configure(function() {
 	app.use(app.router);
 	app.use(express.static(__dirname + '/public'));
 });
-
 app.configure('development', function() {
 	app.use(express.errorHandler({
 		dumpExceptions : true,
 		showStack : true
 	}));
 });
-
 app.configure('production', function() {
 	app.use(express.errorHandler());
 });
-
 app.get('/', function(req, res){
 	var versioninfo = mongodb.collection('versioninfo');
 	versioninfo.findOne({appName:'AndroidBicycle'}, function(err, data){
@@ -43,11 +40,9 @@ app.get('/', function(req, res){
 		}
 	});	
 });
-
 app.get('/bicycleinfo', function(req, res){
 	bicycleInfo.redirect(req, res);
 });
-
 app.get('/versioninfo', function(req, res){
 	var versioninfo = mongodb.collection('versioninfo');
 	versioninfo.findOne({appName:'AndroidBicycle'}, function(err, data){
@@ -58,11 +53,12 @@ app.get('/versioninfo', function(req, res){
 		}
 	});
 });
-
 app.get('/updateversioninfo', function(req, res){	
 	res.render('uploadverioninfo.jade',{title:'Update Version'});
 });
-
+app.get('/uploadfeedback', function(req, res){
+    res.render('uploadfeedback.jade', {title:'Upload Feedback'});
+});
 app.get('/feedback', function(req, res){
 	var feedback = mongodb.collection('feedback');
 	feedback.find({}).toArray(function(err, result){
@@ -72,8 +68,23 @@ app.get('/feedback', function(req, res){
 			// console.log('result = ' + util.inspect(result));
 			res.render('feedback.jade', {title:'AndroidBicycle Feedback', feedbackArray : result});
 		}
+	});	
+});
+
+app.get('/proxy', function(req, res){
+	var proxylist = mongodb.collection('proxy');
+	console.log('find = ' + util.inspect(proxylist.find));
+	proxylist.find({}).toArray(function(err, result){
+		if(err){
+			res.redirect('/error');
+		}else{
+			res.render('proxy.jade', {title : 'AndroidBicycle Proxy', proxyArray : result});
+		}
 	});
-	
+});
+
+app.get('/addproxy', function(req, res){
+	res.render('addproxy.jade', {title : 'Add Proxy'});
 });
 
 app.get('/error', function(req, res){
@@ -110,16 +121,15 @@ app.post('/versioninfo', function(req, res){
 		}
 	});	
 });
-
 app.post('/feedback', function(req, res){
 	var feedbackMsg = req.body.msg;
 	var feedback = mongodb.collection('feedback');
-	feedback.inert({appName:'AndroidBicycle', feedbackMsg : feedbackMsg, uploadTime : new Date().toLocaleString}, function(err, result){
+	feedback.insert({appName:'AndroidBicycle', feedbackMsg : feedbackMsg, uploadTime : new Date().toLocaleString()}, function(err, result){
 		if(err){
 			res.redirect('/error');
 		}else{
 			if(result){
-				res.redirec('/');
+				res.redirect('/');
 			}else{
 				res.redirect('/error');
 			}
@@ -127,8 +137,25 @@ app.post('/feedback', function(req, res){
 	});
 });
 
-app.listen(8000);
+app.post('/addproxy', function(req, res){
+	var proxyUrl = req.body.proxy;
+	var proxy = mongodb.collection('proxy');
+	proxy.insert({proxyUrl : proxyUrl}, function(err, result){
+		if(err){
+			res.redirect('/error');
+		}else{
+			if(result){
+				res.redirect('/');
+			}else{
+				res.redirect('/error');
+			}
+		}
+	});
+});
 
+bicycleInfo.initProxy(mongodb);
 bicycleInfo.refreshCookieTask();
+
+app.listen(8000);
 
 console.log('Listen on port 4000!');

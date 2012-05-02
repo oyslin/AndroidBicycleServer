@@ -1,0 +1,15 @@
+!!!5
+html
+	head
+		title= title
+		link(rel="stylesheet", type="text/css", href="/styles/style.css")
+	body
+		.body_container
+			.menu_container
+				a.menu_item(title="", href="/") Home
+			.content_container
+				form(name="proxyinfo", action="/addproxy", method="post")
+					.proxy_url
+						span Proxy Url:
+						input.proxy_url_input(type="text", name="proxy")					
+					input.update_btn(type="submit", value="Add")

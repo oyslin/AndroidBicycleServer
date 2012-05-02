@@ -2,7 +2,6 @@
 var URL = require('url'),
 	http = require('http'),
 	util = require('util');
-
 var cityArray = ['suzhou', 'changshu', 'kunshan', 'nantong', 'zhongshan', 'shaoxing', 'wujiang'],
 	mapUrls = ['http://www.subicycle.com/map.asp','http://www.csbike01.com/map.asp', 'http://www.ksbike01.com/map2.asp', 'http://www.ntbike.com/map.asp', 
 			  'http://www.zsbicycle.com/zsbicycle/map.asp', 'http://www.sxbicycle.com/map1.asp', 'http://www.wjbicycle.com/wjbicycle/map.asp'],
@@ -12,7 +11,10 @@ var cityArray = ['suzhou', 'changshu', 'kunshan', 'nantong', 'zhongshan', 'shaox
 	singleBicycleUrl = ['http://www.subicycle.com/szmap/ibikestation.asp?id=', 'http://www.csbike01.com/csmap/ibikestation.asp?id=', 'http://www.ksbike01.com/ksmap/ibikestation.asp?id=',
 						'http://www.ntbike.com/ntmap/ibikestation.asp?id=', 'http://www.zsbicycle.com/zsbicycle/zsmap/ibikestation.asp?id=',
 						'http://www.sxbicycle.com/sxmap/ibikestation.asp?id=', 'http://www.wjbicycle.com/wjbicycle/wjmap/ibikestation.asp?id='],
-	cookieArray = [null, null, null, null, null, null, null];
+	cookieArray = [null, null, null, null, null, null, null],
+	proxyPath = 'http://60.190.129.52:3128',
+	proxyOptions = null,
+	db = null;
 	
 function redirect(req, res){	
 	var city = req.query['city'];
@@ -47,11 +49,13 @@ function getIndex(city){
 
 function getCookie(index, id, res){
 	var mapUrl = mapUrls[index];
-	var options = URL.parse(mapUrl);
+	// var options = URL.parse(mapUrl);
+	var options = proxyOptions;
+	options.path = mapUrl;
 	
 	options.headers = {
 		Connection : 'keep-alive',
-		Host : options.host		
+		Host : mapUrl		
 	};
 	// options.port = '80';
 	
@@ -73,11 +77,14 @@ function getCookie(index, id, res){
 }
 
 function getBicycleInfo(index, id, res){
-	var bicycleOption = URL.parse(getBicycleUrl(index, id));
+	// var bicycleOption = URL.parse(getBicycleUrl(index, id));
+	var bicycleOption = proxyOptions;
+	var bicyclePath = getBicycleUrl(index, id)
+	bicycleOption.path = bicyclePath;
 	bicycleOption.headers = {
 		Connection : 'keep-alive',
-		Host : bicycleOption.host,
-		cookie : cookieArray[index]
+		Host : bicyclePath,
+		cookie : cookieArray[index]		
 	}
 	
 	http.get(bicycleOption, function(response) {
@@ -87,7 +94,12 @@ function getBicycleInfo(index, id, res){
 			data += chunck;
 		});
 		response.on('end', function(){
-			if(data){
+			if(data){	
+				if(data.length < 20){
+					console.log('===============================***************************')
+					removeCurrentProxy();
+					initProxyOption();					
+				}
 				res.writeHead(200, {'Content-Type': 'text/plain'});
 				res.end(data);
 			}
@@ -96,6 +108,7 @@ function getBicycleInfo(index, id, res){
 }
 
 function refreshCookieTask(){
+	proxyOptions = URL.parse(proxyPath);
 	console.log('----------------------refreshCookieTask------------------------------');
 	for(var i = 0; i < 1; i++){
 		//first get cookie
@@ -110,11 +123,16 @@ function refreshCookieTask(){
 function getCookieTask(index){
 	console.log('****************Refresh City ' + cityArray[index] +' cookie ****************')
 	var mapUrl = mapUrls[index];
-	var options = URL.parse(mapUrl);
+	// var options = URL.parse(mapUrl);
+	
+	var options = proxyOptions;
+	options.path = mapUrl;
+	
+	console.log('options = ' + util.inspect(options));
 	
 	options.headers = {
 		Connection : 'close',
-		Host : options.host
+		Host : mapUrl
 	};
 	
 	http.get(options, function(response) {
@@ -145,10 +163,14 @@ function keepSessinTask(index){
 
 function getBicycleInfoTask(index){
 	console.log('================getBicycleInfoTask=========== index = ' + index);
-	var bicycleOption = URL.parse(getBicycleUrl(index, 1));
+	// var bicycleOption = URL.parse(getBicycleUrl(index, 1));
+	var bicycleOption = proxyOptions;
+	var bicyclePath = getBicycleUrl(index, 1);
+	
+	bicycleOption.path = bicyclePath;
 	bicycleOption.headers = {
 		Connection : 'keep-alive',
-		Host : bicycleOption.host,
+		Host : bicyclePath,
 		cookie : cookieArray[index]
 	}
 	
@@ -172,5 +194,36 @@ function getBicycleUrl(index, id){
 	return url;
 }
 
+function initProxy(mongodb){	
+	db = mongodb;
+}
+
+function initProxyOption(){
+	var proxyList = db.collection('proxy');
+	
+	proxyList.findOne({}, function(err, result){
+		console.log('err = ' + err + ', result = ' + util.inspect(result));
+		if(err){
+			return;
+		}else{
+			if(result){
+				proxyPath = result.proxyUrl;				
+				proxyOptions = URL.parse(proxyPath);
+			}
+		}
+	});
+}
+
+function removeCurrentProxy(){
+	var proxy = db.collection('proxy');
+	proxy.remove({proxyUrl : proxyPath}, function(err, result){
+		console.log('=======================Deleted proxy : ' + proxyPath);
+		if(!err){
+			console.log('Deleted proxy : ' + proxyPath);
+		}
+	});
+}
+
 exports.redirect = redirect;
+exports.initProxy = initProxy;
 exports.refreshCookieTask = refreshCookieTask;

@@ -34,7 +34,8 @@ body{
 	border: 1px solid #AAA;
 }
 .content_container .version_name,
-.content_container .version_code{
+.content_container .version_code,
+.content_container .proxy_url{
 	background-color: #90F8F5;	
 	clear: both;
 }
@@ -57,4 +58,15 @@ body{
 	background-color:#EEE;
 	word-break:break-all;
 	word-wrap:break-word;
+}
+
+.proxy_content{
+	width: 800px;
+	height: auto;	
+	margin: 0 auto;
+}
+
+.proxy_content .proxy_url{
+	padding: 0 10px;	
+	background-color: #CCC;
 }

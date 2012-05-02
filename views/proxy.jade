@@ -8,12 +8,12 @@ html
 		.body_container
 			.menu_container
 				a.menu_item(title="", href="/") Home
-			.feedback_content
-				-if(feedbackArray.length)
+				a.menu_item(title="", href="/addproxy") Add Proxy
+			.proxy_content
+				-if(proxyArray.length)
 					table					
-						-for item in feedbackArray
+						-for item in proxyArray
 							tr
-								td.feedback_time= item.uploadTime
-								td.feedback_msg= item.feedbackMsg
+								td.proxy_url= item.proxyUrl
 				-else
-					span No feedback
+					span No Proxy
